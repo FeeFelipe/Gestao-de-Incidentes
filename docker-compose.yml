@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-preoday
+    restart: always
+    environment:
+      MYSQL_DATABASE: preoday_api_tests
+      MYSQL_USER: preoday
+      MYSQL_PASSWORD: preoday
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    command: --default-authentication-plugin=mysql_native_password
+
+  app:
+    build:
+      context: ./app
+    container_name: incident-app
+    restart: always
+    environment:
+      DB_HOST: mysql
+      DB_NAME: preoday_api_tests
+      DB_USER: preoday
+      DB_PASS: preoday
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
